@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>tap or flop 💀</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, #ff6ef7, #6ef7ff, #f7ff6e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    #subtitle {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    #arena {
+      width: 340px;
+      height: 340px;
+      border: 2px solid #222;
+      border-radius: 24px;
+      position: relative;
+      background: #111;
+      overflow: hidden;
+      box-shadow: 0 0 40px #ff6ef722;
+    }
+
+    #dot {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      position: absolute;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      transition: transform 0.1s;
+      box-shadow: 0 0 20px currentColor;
+    }
+
+    #dot:active { transform: scale(0.85); }
+
+    #stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 24px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    #timer-bar-wrap {
+      width: 340px;
+      height: 6px;
+      background: #222;
+      border-radius: 99px;
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    #timer-bar {
+      height: 100%;
+      width: 100%;
+      border-radius: 99px;
+      transition: width linear;
+      background: linear-gradient(90deg, #ff6ef7, #6ef7ff);
+    }
+
+    #message {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      min-height: 28px;
+      letter-spacing: 1px;
+    }
+
+    #start-btn {
+      margin-top: 22px;
+      padding: 12px 36px;
+      background: linear-gradient(90deg, #ff6ef7, #6ef7ff);
+      border: none;
+      border-radius: 99px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #000;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    #start-btn:hover { transform: scale(1.05); }
+    #start-btn:active { transform: scale(0.95); opacity: 0.85; }
+
+    #streak-badge {
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      background: #ff6ef7;
+      color: #000;
+      font-weight: 900;
+      font-size: 0.8rem;
+      padding: 6px 14px;
+      border-radius: 99px;
+      display: none;
+      letter-spacing: 1px;
+    }
+
+    .pop {
+      animation: pop 0.25s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+
+    .miss-flash {
+      animation: missflash 0.3s ease;
+    }
+
+    @keyframes missflash {
+      0%   { background: #0d0d0d; }
+      50%  { background: #3a0000; }
+      100% { background: #0d0d0d; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>tap or flop 💀</h1>
+  <div id="subtitle">reaction speed game</div>
+
+  <div id="arena">
+    <div id="dot" style="display:none"></div>
+  </div>
+
+  <div id="timer-bar-wrap">
+    <div id="timer-bar"></div>
+  </div>
+
+  <div id="stats">
+    <div class="stat">
+      <div class="stat-label">score</div>
+      <div class="stat-value" id="score">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">best</div>
+      <div class="stat-value" id="best">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">streak 🔥</div>
+      <div class="stat-value" id="streak">0</div>
+    </div>
+  </div>
+
+  <div id="message"></div>
+  <button id="start-btn">let's go 🚀</button>
+  <div id="streak-badge" id="streak-badge"></div>
+
+<script>
+  const dot = document.getElementById('dot');
+  const arena = document.getElementById('arena');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const streakEl = document.getElementById('streak');
+  const msgEl = document.getElementById('message');
+  const startBtn = document.getElementById('start-btn');
+  const timerBar = document.getElementById('timer-bar');
+  const streakBadge = document.getElementById('streak-badge');
+
+  const emojis = ['🎯','⚡','💥','🔥','✨','🫧','👾','💎','🍄','🌀'];
+  const colors = ['#ff6ef7','#6ef7ff','#f7ff6e','#ff9f6e','#6eff9f','#b06eff'];
+  const hitMessages = ['slay 💅','no cap 🔥','ate that 🍽️','period.','understood the assignment','ok bestie','W hit ✅','lowkey goated'];
+  const missMessages = ['bruh 💀','not you flopping','ratio ❌','skill issue fr','down bad rn','L moment'];
+
+  let score = 0, best = 0, streak = 0, gameActive = false;
+  let dotTimeout, missTimeout, timerInterval;
+  let windowMs = 1100;
+
+  function getRandom(min, max) { return Math.floor(Math.random() * (max - min)) + min; }
+
+  function placeDot() {
+    if (!gameActive) return;
+
+    const maxX = arena.offsetWidth - 70;
+    const maxY = arena.offsetHeight - 70;
+    const x = getRandom(8, maxX);
+    const y = getRandom(8, maxY);
+    const emoji = emojis[getRandom(0, emojis.length)];
+    const color = colors[getRandom(0, colors.length)];
+
+    dot.style.left = x + 'px';
+    dot.style.top  = y + 'px';
+    dot.style.background = color + '22';
+    dot.style.border = `3px solid ${color}`;
+    dot.style.color = color;
+    dot.style.display = 'flex';
+    dot.textContent = emoji;
+
+    // timer bar
+    timerBar.style.transition = 'none';
+    timerBar.style.width = '100%';
+    setTimeout(() => {
+      timerBar.style.transition = `width ${windowMs}ms linear`;
+      timerBar.style.width = '0%';
+    }, 20);
+
+    // miss if not tapped in time
+    missTimeout = setTimeout(() => {
+      if (!gameActive) return;
+      dot.style.display = 'none';
+      streak = 0;
+      streakEl.textContent = streak;
+      streakBadge.style.display = 'none';
+      const msg = missMessages[getRandom(0, missMessages.length)];
+      flashMsg(msg, '#ff6e6e');
+      document.body.classList.add('miss-flash');
+      setTimeout(() => document.body.classList.remove('miss-flash'), 300);
+      // speed up slightly on miss
+      windowMs = Math.max(500, windowMs - 20);
+      dotTimeout = setTimeout(placeDot, getRandom(400, 900));
+    }, windowMs);
+  }
+
+  function flashMsg(text, color) {
+    msgEl.textContent = text;
+    msgEl.style.color = color;
+    clearTimeout(msgEl._t);
+    msgEl._t = setTimeout(() => { msgEl.textContent = ''; }, 1200);
+  }
+
+  dot.addEventListener('click', () => {
+    if (!gameActive) return;
+    clearTimeout(missTimeout);
+    clearTimeout(dotTimeout);
+
+    score++;
+    streak++;
+    scoreEl.textContent = score;
+    streakEl.textContent = streak;
+
+    if (score > best) { best = score; bestEl.textContent = best; }
+
+    dot.classList.add('pop');
+    setTimeout(() => dot.classList.remove('pop'), 250);
+    dot.style.display = 'none';
+
+    // streak badge
+    if (streak >= 3) {
+      streakBadge.textContent = `🔥 ${streak} streak`;
+      streakBadge.style.display = 'block';
+    }
+
+    const msg = hitMessages[getRandom(0, hitMessages.length)];
+    flashMsg(msg, '#6ef7ff');
+
+    // speed up on hit
+    windowMs = Math.max(480, windowMs - 25);
+
+    dotTimeout = setTimeout(placeDot, getRandom(250, 700));
+  });
+
+  // clicking arena background = miss
+  arena.addEventListener('click', (e) => {
+    if (e.target !== dot && gameActive) {
+      streak = 0;
+      streakEl.textContent = 0;
+      streakBadge.style.display = 'none';
+      flashMsg(missMessages[getRandom(0, missMessages.length)], '#ff6e6e');
+    }
+  });
+
+  startBtn.addEventListener('click', () => {
+    score = 0; streak = 0; windowMs = 1100;
+    scoreEl.textContent = 0;
+    streakEl.textContent = 0;
+    streakBadge.style.display = 'none';
+    msgEl.textContent = '';
+    gameActive = true;
+    startBtn.textContent = 'reset 🔁';
+    clearTimeout(dotTimeout);
+    clearTimeout(missTimeout);
+    dotTimeout = setTimeout(placeDot, 500);
+  });
+</script>
+</body>
+</html>
